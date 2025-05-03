@@ -5,13 +5,12 @@ const app = express();
 const xlsx = require('xlsx');
 
 
-console.log(data);
 
-app.get('/transactions' , (req , res) => {
+app.get('/transactions' , async (req , res) => {
     const workbook = xlsx.readFile('./report.xls');
     const sheetNames = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetNames];
-    const data = xlsx.utils.sheet_to_json(worksheet);
+    const data = xlsx.utils.sheet_to_json(worksheet ,{range: 21});
     res.send(data);
 })
 

@@ -14,7 +14,7 @@ mongoose.connect('mongodb+srv://root:pXPaXrNt07fibiDd@cluster0.p59yd6g.mongodb.n
 
 
 app.get('/transactions', (req, res) => {
-  const workbook = xlsx.readFile('./report.xls');
+  const workbook = xlsx.readFile('./report2.xls');
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
   const data = xlsx.utils.sheet_to_json(worksheet, { range: 21 });

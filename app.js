@@ -38,7 +38,7 @@ app.get('/transactions', async (req, res) => {
     );
 
     const formatted = response.data.map(tr => ({
-      'Дата і час операції': new Date(tr.time * 1000).toLocaleString(),
+      'Дата i час операції': new Date(tr.time * 1000).toLocaleString(),
       'Деталі операції': tr.description,
       'Сума в валюті картки (UAH)': tr.amount / 100 + ' ' + (tr.currencyCode === 980 ? '₴' : ''),
     }));

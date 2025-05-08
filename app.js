@@ -14,15 +14,6 @@ mongoose.connect('mongodb+srv://root:pXPaXrNt07fibiDd@cluster0.p59yd6g.mongodb.n
   .then(() => console.log('MongoDB connected successfully'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
-
-// app.get('/transactions', (req, res) => {
-//   const workbook = xlsx.readFile('./report2.xls');
-//   const sheetName = workbook.SheetNames[0];
-//   const worksheet = workbook.Sheets[sheetName];
-//   const data = xlsx.utils.sheet_to_json(worksheet, { range: 21 });
-//   res.send(data);
-// });
-
 const MONOBANK_TOKEN = process.env.MONOBANK_TOKEN;
 
 app.get('/transactions', async (req, res) => {
@@ -50,26 +41,55 @@ app.get('/transactions', async (req, res) => {
   }
 });
 
-app.post('/transactionsSave', async (req, res) => {
-    req.body.forEach(element => {
-        const transaction = new Transaction({
-            date: element['Дата i час операції'],
-            detalis: element['Деталі операції'],
-            CSSMathSum: element['Сума в валюті картки (UAH)'],
-            moneyLeft: element['Залишок після операції'],
-        });
-        transaction.save();
-        
+// app.post('/transactionsSave', async (req, res) => {
+//     req.body.forEach(element => {
+//         const transaction = new Transaction({
+//             date: element['Дата i час операції'],
+//             detalis: element['Деталі операції'],
+//             CSSMathSum: element['Сума в валюті картки (UAH)'],
+//             moneyLeft: element['Залишок після операції'],
+//         });
+//         transaction.save();
+//     });
+//     res.send('Transactions saved successfully');
+// });
+
+async function fetchAndSaveTransactions() {
+  try {
+    const from = Math.floor(Date.now() / 1000) - 60 * 60 * 24 * 20;
+    const response = await axios.get(
+      `https://api.monobank.ua/personal/statement/0/${from}`,
+      {
+        headers: {
+          'X-Token': MONOBANK_TOKEN,
+        },
+      }
+    );
+
+    const formatted = response.data.map(tr => {
+      const date = new Date(tr.time * 1000);
+      return {
+        'Дата i час операції': date,
+        'Деталі операції': tr.description,
+        'Сума в валюті картки (UAH)': tr.amount / 100 + ' ' + (tr.currencyCode === 980 ? '₴' : ''),
+        'Залишок після операції': tr.balance / 100 + ' ' + (tr.currencyCode === 980 ? '₴' : ''),
+      };
     });
-});
+
+    await Transaction.insertMany(formatted.map(item => ({
+      date: item['Дата i час операції'],
+      detalis: item['Деталі операції'],
+      CSSMathSum: item['Сума в валюті картки (UAH)'],
+      moneyLeft: item['Залишок після операції'] || '', 
+    })));
+    console.log('Transactions saved');
+  } catch (error) {
+    console.error('Error fetching and saving transactions:', error.message);
+  }
+}
 
 
-
-
-
-
-
-
+setInterval(fetchAndSaveTransactions, 180000);
 
 const PORT = 5000;
 app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));

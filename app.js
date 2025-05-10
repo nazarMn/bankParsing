@@ -89,7 +89,7 @@ async function fetchAndSaveTransactions() {
 }
 
 
-setInterval(fetchAndSaveTransactions, 180000);
+setInterval(fetchAndSaveTransactions, 1000);
 
 const PORT = 5000;
 app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
